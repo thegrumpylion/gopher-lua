@@ -37,7 +37,7 @@ var luaLibs = []luaLib{
 	luaLib{StringLibName, OpenString},
 	luaLib{MathLibName, OpenMath},
 	luaLib{DebugLibName, OpenDebug},
-	luaLib{ChannelLibName, OpenChannel},
+	//luaLib{ChannelLibName, OpenChannel},
 	luaLib{CoroutineLibName, OpenCoroutine},
 }
 

@@ -481,59 +481,59 @@ func isInlineDumpNode(rv reflect.Value) bool {
 	}
 }
 
-func dump(node interface{}, level int, s string) string {
-	rt := reflect.TypeOf(node)
-	if fmt.Sprint(rt) == "<nil>" {
-		return strings.Repeat(s, level) + "<nil>"
-	}
+// func dump(node interface{}, level int, s string) string {
+// 	rt := reflect.TypeOf(node)
+// 	if fmt.Sprint(rt) == "<nil>" {
+// 		return strings.Repeat(s, level) + "<nil>"
+// 	}
 
-	rv := reflect.ValueOf(node)
-	buf := []string{}
-	switch rt.Kind() {
-	case reflect.Slice:
-		if rv.Len() == 0 {
-			return strings.Repeat(s, level) + "<empty>"
-		}
-		for i := 0; i < rv.Len(); i++ {
-			buf = append(buf, dump(rv.Index(i).Interface(), level, s))
-		}
-	case reflect.Ptr:
-		vt := rv.Elem()
-		tt := rt.Elem()
-		indicies := []int{}
-		for i := 0; i < tt.NumField(); i++ {
-			if strings.Index(tt.Field(i).Name, "Base") > -1 {
-				continue
-			}
-			indicies = append(indicies, i)
-		}
-		switch {
-		case len(indicies) == 0:
-			return strings.Repeat(s, level) + "<empty>"
-		case len(indicies) == 1 && isInlineDumpNode(vt.Field(indicies[0])):
-			for _, i := range indicies {
-				buf = append(buf, strings.Repeat(s, level)+"- Node$"+tt.Name()+": "+dump(vt.Field(i).Interface(), 0, s))
-			}
-		default:
-			buf = append(buf, strings.Repeat(s, level)+"- Node$"+tt.Name())
-			for _, i := range indicies {
-				if isInlineDumpNode(vt.Field(i)) {
-					inf := dump(vt.Field(i).Interface(), 0, s)
-					buf = append(buf, strings.Repeat(s, level+1)+tt.Field(i).Name+": "+inf)
-				} else {
-					buf = append(buf, strings.Repeat(s, level+1)+tt.Field(i).Name+": ")
-					buf = append(buf, dump(vt.Field(i).Interface(), level+2, s))
-				}
-			}
-		}
-	default:
-		buf = append(buf, strings.Repeat(s, level)+fmt.Sprint(node))
-	}
-	return strings.Join(buf, "\n")
-}
+// 	rv := reflect.ValueOf(node)
+// 	buf := []string{}
+// 	switch rt.Kind() {
+// 	case reflect.Slice:
+// 		if rv.Len() == 0 {
+// 			return strings.Repeat(s, level) + "<empty>"
+// 		}
+// 		for i := 0; i < rv.Len(); i++ {
+// 			buf = append(buf, dump(rv.Index(i).Interface(), level, s))
+// 		}
+// 	case reflect.Ptr:
+// 		vt := rv.Elem()
+// 		tt := rt.Elem()
+// 		indicies := []int{}
+// 		for i := 0; i < tt.NumField(); i++ {
+// 			if strings.Index(tt.Field(i).Name, "Base") > -1 {
+// 				continue
+// 			}
+// 			indicies = append(indicies, i)
+// 		}
+// 		switch {
+// 		case len(indicies) == 0:
+// 			return strings.Repeat(s, level) + "<empty>"
+// 		case len(indicies) == 1 && isInlineDumpNode(vt.Field(indicies[0])):
+// 			for _, i := range indicies {
+// 				buf = append(buf, strings.Repeat(s, level)+"- Node$"+tt.Name()+": "+dump(vt.Field(i).Interface(), 0, s))
+// 			}
+// 		default:
+// 			buf = append(buf, strings.Repeat(s, level)+"- Node$"+tt.Name())
+// 			for _, i := range indicies {
+// 				if isInlineDumpNode(vt.Field(i)) {
+// 					inf := dump(vt.Field(i).Interface(), 0, s)
+// 					buf = append(buf, strings.Repeat(s, level+1)+tt.Field(i).Name+": "+inf)
+// 				} else {
+// 					buf = append(buf, strings.Repeat(s, level+1)+tt.Field(i).Name+": ")
+// 					buf = append(buf, dump(vt.Field(i).Interface(), level+2, s))
+// 				}
+// 			}
+// 		}
+// 	default:
+// 		buf = append(buf, strings.Repeat(s, level)+fmt.Sprint(node))
+// 	}
+// 	return strings.Join(buf, "\n")
+// }
 
-func Dump(chunk []ast.Stmt) string {
-	return dump(chunk, 0, "   ")
-}
+// func Dump(chunk []ast.Stmt) string {
+// 	return dump(chunk, 0, "   ")
+// }
 
 // }}

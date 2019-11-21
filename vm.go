@@ -53,9 +53,6 @@ func mainLoopWithContext(L *LState, baseframe *callFrame) {
 		inst = cf.Fn.Proto.Code[cf.Pc]
 		cf.Pc++
 		select {
-		case <-L.ctx.Done():
-			L.RaiseError(L.ctx.Err().Error())
-			return
 		default:
 			if jumpTable[int(inst>>26)](L, inst, baseframe) == 1 {
 				return

@@ -1,8 +1,9 @@
 package lua
 
 import (
-	"context"
+	"crypto/md5"
 	"fmt"
+	"io"
 )
 
 type LValueType int
@@ -34,6 +35,9 @@ type LValue interface {
 	assertString() (string, bool)
 	// to reduce `runtime.assertI2T2` costs, this method should be used instead of the type assertion in heavy paths(typically inside the VM).
 	assertFunction() (*LFunction, bool)
+
+	// tinyGo port
+	hash() string
 }
 
 // LVIsFalse returns true if a given LValue is a nil or false otherwise false.
@@ -84,6 +88,12 @@ func (nl *LNilType) Type() LValueType                   { return LTNil }
 func (nl *LNilType) assertFloat64() (float64, bool)     { return 0, false }
 func (nl *LNilType) assertString() (string, bool)       { return "", false }
 func (nl *LNilType) assertFunction() (*LFunction, bool) { return nil, false }
+func (nl *LNilType) hash() string {
+	h := md5.New()
+	io.WriteString(h, nl.String())
+	io.WriteString(h, nl.Type().String())
+	return string(h.Sum(nil))
+}
 
 var LNil = LValue(&LNilType{})
 
@@ -99,6 +109,12 @@ func (bl LBool) Type() LValueType                   { return LTBool }
 func (bl LBool) assertFloat64() (float64, bool)     { return 0, false }
 func (bl LBool) assertString() (string, bool)       { return "", false }
 func (bl LBool) assertFunction() (*LFunction, bool) { return nil, false }
+func (bl LBool) hash() string {
+	h := md5.New()
+	io.WriteString(h, bl.String())
+	io.WriteString(h, bl.Type().String())
+	return string(h.Sum(nil))
+}
 
 var LTrue = LBool(true)
 var LFalse = LBool(false)
@@ -110,6 +126,12 @@ func (st LString) Type() LValueType                   { return LTString }
 func (st LString) assertFloat64() (float64, bool)     { return 0, false }
 func (st LString) assertString() (string, bool)       { return string(st), true }
 func (st LString) assertFunction() (*LFunction, bool) { return nil, false }
+func (st LString) hash() string {
+	h := md5.New()
+	io.WriteString(h, st.String())
+	io.WriteString(h, st.Type().String())
+	return string(h.Sum(nil))
+}
 
 // fmt.Formatter interface
 func (st LString) Format(f fmt.State, c rune) {
@@ -136,6 +158,12 @@ func (nm LNumber) Type() LValueType                   { return LTNumber }
 func (nm LNumber) assertFloat64() (float64, bool)     { return float64(nm), true }
 func (nm LNumber) assertString() (string, bool)       { return "", false }
 func (nm LNumber) assertFunction() (*LFunction, bool) { return nil, false }
+func (nm LNumber) hash() string {
+	h := md5.New()
+	io.WriteString(h, nm.String())
+	io.WriteString(h, nm.Type().String())
+	return string(h.Sum(nil))
+}
 
 // fmt.Formatter interface
 func (nm LNumber) Format(f fmt.State, c rune) {
@@ -161,10 +189,10 @@ type LTable struct {
 	Metatable LValue
 
 	array   []LValue
-	dict    map[LValue]LValue
+	dict    map[string]LValue
 	strdict map[string]LValue
 	keys    []LValue
-	k2i     map[LValue]int
+	k2i     map[string]int
 }
 
 func (tb *LTable) String() string                     { return fmt.Sprintf("table: %p", tb) }
@@ -172,6 +200,12 @@ func (tb *LTable) Type() LValueType                   { return LTTable }
 func (tb *LTable) assertFloat64() (float64, bool)     { return 0, false }
 func (tb *LTable) assertString() (string, bool)       { return "", false }
 func (tb *LTable) assertFunction() (*LFunction, bool) { return nil, false }
+func (tb *LTable) hash() string {
+	h := md5.New()
+	io.WriteString(h, tb.String())
+	io.WriteString(h, tb.Type().String())
+	return string(h.Sum(nil))
+}
 
 type LFunction struct {
 	IsG       bool
@@ -187,6 +221,12 @@ func (fn *LFunction) Type() LValueType                   { return LTFunction }
 func (fn *LFunction) assertFloat64() (float64, bool)     { return 0, false }
 func (fn *LFunction) assertString() (string, bool)       { return "", false }
 func (fn *LFunction) assertFunction() (*LFunction, bool) { return fn, true }
+func (fn *LFunction) hash() string {
+	h := md5.New()
+	io.WriteString(h, fn.String())
+	io.WriteString(h, fn.Type().String())
+	return string(h.Sum(nil))
+}
 
 type Global struct {
 	MainThread    *LState
@@ -216,7 +256,6 @@ type LState struct {
 	uvcache      *Upvalue
 	hasErrorFunc bool
 	mainLoop     func(*LState, *callFrame)
-	ctx          context.Context
 }
 
 func (ls *LState) String() string                     { return fmt.Sprintf("thread: %p", ls) }
@@ -224,6 +263,12 @@ func (ls *LState) Type() LValueType                   { return LTThread }
 func (ls *LState) assertFloat64() (float64, bool)     { return 0, false }
 func (ls *LState) assertString() (string, bool)       { return "", false }
 func (ls *LState) assertFunction() (*LFunction, bool) { return nil, false }
+func (ls *LState) hash() string {
+	h := md5.New()
+	io.WriteString(h, ls.String())
+	io.WriteString(h, ls.Type().String())
+	return string(h.Sum(nil))
+}
 
 type LUserData struct {
 	Value     interface{}
@@ -236,6 +281,12 @@ func (ud *LUserData) Type() LValueType                   { return LTUserData }
 func (ud *LUserData) assertFloat64() (float64, bool)     { return 0, false }
 func (ud *LUserData) assertString() (string, bool)       { return "", false }
 func (ud *LUserData) assertFunction() (*LFunction, bool) { return nil, false }
+func (ud *LUserData) hash() string {
+	h := md5.New()
+	io.WriteString(h, ud.String())
+	io.WriteString(h, ud.Type().String())
+	return string(h.Sum(nil))
+}
 
 type LChannel chan LValue
 
@@ -244,3 +295,9 @@ func (ch LChannel) Type() LValueType                   { return LTChannel }
 func (ch LChannel) assertFloat64() (float64, bool)     { return 0, false }
 func (ch LChannel) assertString() (string, bool)       { return "", false }
 func (ch LChannel) assertFunction() (*LFunction, bool) { return nil, false }
+func (ch LChannel) hash() string {
+	h := md5.New()
+	io.WriteString(h, ch.String())
+	io.WriteString(h, ch.Type().String())
+	return string(h.Sum(nil))
+}

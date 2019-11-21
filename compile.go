@@ -2,9 +2,9 @@ package lua
 
 import (
 	"fmt"
-	"github.com/yuin/gopher-lua/ast"
 	"math"
-	"reflect"
+
+	"github.com/yuin/gopher-lua/ast"
 )
 
 /* internal constants & structs  {{{ */
@@ -1061,7 +1061,8 @@ func compileExpr(context *funcContext, reg int, expr ast.Expr, ec *expcontext) i
 		}
 		return sused
 	default:
-		panic(fmt.Sprintf("expr %v not implemented.", reflect.TypeOf(ex).Elem().Name()))
+		//panic(fmt.Sprintf("expr %v not implemented.", reflect.TypeOf(ex).Elem().Name()))
+		panic("expr not implemented")
 	}
 
 } // }}}

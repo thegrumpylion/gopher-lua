@@ -5,17 +5,14 @@ package lua
 ////////////////////////////////////////////////////////
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"math"
-	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
-	"time"
 
-	"github.com/yuin/gopher-lua/parse"
+	"github.com/thegrumpylion/gopher-lua/parse"
 )
 
 const MultRet = -1
@@ -104,7 +101,7 @@ type Options struct {
 	// Controls whether or not libraries are opened by default
 	SkipOpenLibs bool
 	// Tells whether a Go stacktrace should be included in a Lua stacktrace when panics occur.
-	IncludeGoStackTrace bool
+	// IncludeGoStackTrace bool
 	// If `MinimizeStackMemory` is set, the call stack will be automatically grown or shrank up to a limit of
 	// `CallStackSize` in order to minimize memory usage. This does incur a slight performance penalty.
 	MinimizeStackMemory bool
@@ -610,7 +607,6 @@ func newLState(options Options) *LState {
 		uvcache:      nil,
 		hasErrorFunc: false,
 		mainLoop:     mainLoop,
-		ctx:          nil,
 	}
 	if options.MinimizeStackMemory {
 		ls.stack = newAutoGrowingCallFrameStack(options.CallStackSize)
@@ -1529,16 +1525,11 @@ func (ls *LState) CreateTable(acap, hcap int) *LTable {
 
 // NewThread returns a new LState that shares with the original state all global objects.
 // If the original state has context.Context, the new state has a new child context of the original state and this function returns its cancel function.
-func (ls *LState) NewThread() (*LState, context.CancelFunc) {
+func (ls *LState) NewThread() *LState {
 	thread := newLState(ls.Options)
 	thread.G = ls.G
 	thread.Env = ls.Env
-	var f context.CancelFunc = nil
-	if ls.ctx != nil {
-		thread.mainLoop = mainLoopWithContext
-		thread.ctx, f = context.WithCancel(ls.ctx)
-	}
-	return thread, f
+	return thread
 }
 
 func (ls *LState) NewFunctionFromProto(proto *FunctionProto) *LFunction {
@@ -1959,11 +1950,11 @@ func (ls *LState) PCall(nargs, nret int, errfunc *LFunction) (err error) {
 		if rcv != nil {
 			if _, ok := rcv.(*ApiError); !ok {
 				err = newApiErrorS(ApiErrorPanic, fmt.Sprint(rcv))
-				if ls.Options.IncludeGoStackTrace {
-					buf := make([]byte, 4096)
-					runtime.Stack(buf, false)
-					err.(*ApiError).StackTrace = strings.Trim(string(buf), "\000") + "\n" + ls.stackTrace(0)
-				}
+				// if ls.Options.IncludeGoStackTrace {
+				// 	buf := make([]byte, 4096)
+				// 	runtime.Stack(buf, false)
+				// 	err.(*ApiError).StackTrace = strings.Trim(string(buf), "\000") + "\n" + ls.stackTrace(0)
+				// }
 			} else {
 				err = rcv.(*ApiError)
 			}
@@ -1977,11 +1968,11 @@ func (ls *LState) PCall(nargs, nret int, errfunc *LFunction) (err error) {
 					if rcv != nil {
 						if _, ok := rcv.(*ApiError); !ok {
 							err = newApiErrorS(ApiErrorPanic, fmt.Sprint(rcv))
-							if ls.Options.IncludeGoStackTrace {
-								buf := make([]byte, 4096)
-								runtime.Stack(buf, false)
-								err.(*ApiError).StackTrace = strings.Trim(string(buf), "\000") + ls.stackTrace(0)
-							}
+							// if ls.Options.IncludeGoStackTrace {
+							// 	buf := make([]byte, 4096)
+							// 	runtime.Stack(buf, false)
+							// 	err.(*ApiError).StackTrace = strings.Trim(string(buf), "\000") + ls.stackTrace(0)
+							// }
 						} else {
 							err = rcv.(*ApiError)
 							err.(*ApiError).StackTrace = ls.stackTrace(0)
@@ -2153,42 +2144,42 @@ func (ls *LState) XMoveTo(other *LState, n int) {
 /* GopherLua original APIs {{{ */
 
 // Set maximum memory size. This function can only be called from the main thread.
-func (ls *LState) SetMx(mx int) {
-	if ls.Parent != nil {
-		ls.RaiseError("sub threads are not allowed to set a memory limit")
-	}
-	go func() {
-		limit := uint64(mx * 1024 * 1024) //MB
-		var s runtime.MemStats
-		for ls.stop == 0 {
-			runtime.ReadMemStats(&s)
-			if s.Alloc >= limit {
-				panic("out of memory")
-				//os.Exit(3)
-			}
-			time.Sleep(100 * time.Millisecond)
-		}
-	}()
-}
+// func (ls *LState) SetMx(mx int) {
+// 	if ls.Parent != nil {
+// 		ls.RaiseError("sub threads are not allowed to set a memory limit")
+// 	}
+// 	go func() {
+// 		limit := uint64(mx * 1024 * 1024) //MB
+// 		var s runtime.MemStats
+// 		for ls.stop == 0 {
+// 			runtime.ReadMemStats(&s)
+// 			if s.Alloc >= limit {
+// 				panic("out of memory")
+// 				//os.Exit(3)
+// 			}
+// 			time.Sleep(100 * time.Millisecond)
+// 		}
+// 	}()
+// }
 
 // SetContext set a context ctx to this LState. The provided ctx must be non-nil.
-func (ls *LState) SetContext(ctx context.Context) {
-	ls.mainLoop = mainLoopWithContext
-	ls.ctx = ctx
-}
+// func (ls *LState) SetContext(ctx context.Context) {
+// 	ls.mainLoop = mainLoopWithContext
+// 	ls.ctx = ctx
+// }
 
-// Context returns the LState's context. To change the context, use WithContext.
-func (ls *LState) Context() context.Context {
-	return ls.ctx
-}
+// // Context returns the LState's context. To change the context, use WithContext.
+// func (ls *LState) Context() context.Context {
+// 	return ls.ctx
+// }
 
 // RemoveContext removes the context associated with this LState and returns this context.
-func (ls *LState) RemoveContext() context.Context {
-	oldctx := ls.ctx
-	ls.mainLoop = mainLoop
-	ls.ctx = nil
-	return oldctx
-}
+// func (ls *LState) RemoveContext() context.Context {
+// 	oldctx := ls.ctx
+// 	ls.mainLoop = mainLoop
+// 	ls.ctx = nil
+// 	return oldctx
+// }
 
 // Converts the Lua value at the given acceptable index to the chan LValue.
 func (ls *LState) ToChannel(n int) chan LValue {

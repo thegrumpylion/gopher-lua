@@ -195,7 +195,7 @@ func (tb *LTable) RawSetString(key string, value LValue) {
 	}
 	if tb.keys == nil {
 		tb.keys = []LValue{}
-		tb.k2i = map[LValue]int{}
+		tb.k2i = map[string]int{}
 	}
 
 	if value == LNil {
@@ -204,8 +204,8 @@ func (tb *LTable) RawSetString(key string, value LValue) {
 	} else {
 		tb.strdict[key] = value
 		lkey := LString(key)
-		if _, ok := tb.k2i[lkey]; !ok {
-			tb.k2i[lkey] = len(tb.keys)
+		if _, ok := tb.k2i[lkey.hash()]; !ok {
+			tb.k2i[lkey.hash()] = len(tb.keys)
 			tb.keys = append(tb.keys, lkey)
 		}
 	}
@@ -218,20 +218,20 @@ func (tb *LTable) RawSetH(key LValue, value LValue) {
 		return
 	}
 	if tb.dict == nil {
-		tb.dict = make(map[LValue]LValue, len(tb.strdict))
+		tb.dict = make(map[string]LValue, len(tb.strdict))
 	}
 	if tb.keys == nil {
 		tb.keys = []LValue{}
-		tb.k2i = map[LValue]int{}
+		tb.k2i = map[string]int{}
 	}
 
 	if value == LNil {
 		// TODO tb.keys and tb.k2i should also be removed
-		delete(tb.dict, key)
+		delete(tb.dict, key.hash())
 	} else {
-		tb.dict[key] = value
-		if _, ok := tb.k2i[key]; !ok {
-			tb.k2i[key] = len(tb.keys)
+		tb.dict[key.hash()] = value
+		if _, ok := tb.k2i[key.hash()]; !ok {
+			tb.k2i[key.hash()] = len(tb.keys)
 			tb.keys = append(tb.keys, key)
 		}
 	}
@@ -263,7 +263,7 @@ func (tb *LTable) RawGet(key LValue) LValue {
 	if tb.dict == nil {
 		return LNil
 	}
-	if v, ok := tb.dict[key]; ok {
+	if v, ok := tb.dict[key.hash()]; ok {
 		return v
 	}
 	return LNil
@@ -295,7 +295,7 @@ func (tb *LTable) RawGetH(key LValue) LValue {
 	if tb.dict == nil {
 		return LNil
 	}
-	if v, ok := tb.dict[key]; ok {
+	if v, ok := tb.dict[key.hash()]; ok {
 		return v
 	}
 	return LNil
@@ -331,7 +331,7 @@ func (tb *LTable) ForEach(cb func(LValue, LValue)) {
 	if tb.dict != nil {
 		for k, v := range tb.dict {
 			if v != LNil {
-				cb(k, v)
+				cb(tb.keys[tb.k2i[k]], v)
 			}
 		}
 	}
@@ -367,7 +367,7 @@ func (tb *LTable) Next(key LValue) (LValue, LValue) {
 		}
 	}
 
-	for i := tb.k2i[key] + 1; i < len(tb.keys); i++ {
+	for i := tb.k2i[key.hash()] + 1; i < len(tb.keys); i++ {
 		key := tb.keys[i]
 		if v := tb.RawGetH(key); v != LNil {
 			return key, v
