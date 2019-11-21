@@ -6,7 +6,6 @@ import (
 	"github.com/yuin/gopher-lua/parse"
 	"io"
 	"math"
-	"os"
 	"runtime"
 	"strings"
 	"sync"
@@ -529,7 +528,7 @@ func newGlobal() *Global {
 		Registry:   newLTable(0, 32),
 		Global:     newLTable(0, 64),
 		builtinMts: make(map[int]LValue),
-		tempFiles:  make([]*os.File, 0, 10),
+		//tempFiles:  make([]*os.File, 0, 10),
 	}
 }
 
@@ -1203,11 +1202,11 @@ func NewState(opts ...Options) *LState {
 
 func (ls *LState) Close() {
 	atomic.AddInt32(&ls.stop, 1)
-	for _, file := range ls.G.tempFiles {
-		// ignore errors in these operations
-		file.Close()
-		os.Remove(file.Name())
-	}
+	// for _, file := range ls.G.tempFiles {
+	// 	// ignore errors in these operations
+	// 	file.Close()
+	// 	os.Remove(file.Name())
+	// }
 	ls.stack.FreeAll()
 	ls.stack = nil
 }
@@ -2008,8 +2007,8 @@ func (ls *LState) SetMx(mx int) {
 		for ls.stop == 0 {
 			runtime.ReadMemStats(&s)
 			if s.Alloc >= limit {
-				fmt.Println("out of memory")
-				os.Exit(3)
+				panic("out of memory")
+				//os.Exit(3)
 			}
 			time.Sleep(100 * time.Millisecond)
 		}

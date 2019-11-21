@@ -1,9 +1,7 @@
 package lua
 
 import (
-	"fmt"
 	"io"
-	"os"
 	"runtime"
 	"strconv"
 	"strings"
@@ -26,28 +24,28 @@ func OpenBase(L *LState) int {
 var baseFuncs = map[string]LGFunction{
 	"assert":         baseAssert,
 	"collectgarbage": baseCollectGarbage,
-	"dofile":         baseDoFile,
-	"error":          baseError,
-	"getfenv":        baseGetFEnv,
-	"getmetatable":   baseGetMetatable,
-	"load":           baseLoad,
-	"loadfile":       baseLoadFile,
-	"loadstring":     baseLoadString,
-	"next":           baseNext,
-	"pcall":          basePCall,
-	"print":          basePrint,
-	"rawequal":       baseRawEqual,
-	"rawget":         baseRawGet,
-	"rawset":         baseRawSet,
-	"select":         baseSelect,
-	"_printregs":     base_PrintRegs,
-	"setfenv":        baseSetFEnv,
-	"setmetatable":   baseSetMetatable,
-	"tonumber":       baseToNumber,
-	"tostring":       baseToString,
-	"type":           baseType,
-	"unpack":         baseUnpack,
-	"xpcall":         baseXPCall,
+	//"dofile":         baseDoFile,
+	"error":        baseError,
+	"getfenv":      baseGetFEnv,
+	"getmetatable": baseGetMetatable,
+	"load":         baseLoad,
+	//"loadfile":       baseLoadFile,
+	"loadstring":   baseLoadString,
+	"next":         baseNext,
+	"pcall":        basePCall,
+	"print":        basePrint,
+	"rawequal":     baseRawEqual,
+	"rawget":       baseRawGet,
+	"rawset":       baseRawSet,
+	"select":       baseSelect,
+	"_printregs":   base_PrintRegs,
+	"setfenv":      baseSetFEnv,
+	"setmetatable": baseSetMetatable,
+	"tonumber":     baseToNumber,
+	"tostring":     baseToString,
+	"type":         baseType,
+	"unpack":       baseUnpack,
+	"xpcall":       baseXPCall,
 	// loadlib
 	"module":  loModule,
 	"require": loRequire,
@@ -68,18 +66,18 @@ func baseCollectGarbage(L *LState) int {
 	return 0
 }
 
-func baseDoFile(L *LState) int {
-	src := L.ToString(1)
-	top := L.GetTop()
-	fn, err := L.LoadFile(src)
-	if err != nil {
-		L.Push(LString(err.Error()))
-		L.Panic(L)
-	}
-	L.Push(fn)
-	L.Call(0, MultRet)
-	return L.GetTop() - top
-}
+// func baseDoFile(L *LState) int {
+// 	src := L.ToString(1)
+// 	top := L.GetTop()
+// 	fn, err := L.LoadFile(src)
+// 	if err != nil {
+// 		L.Push(LString(err.Error()))
+// 		L.Panic(L)
+// 	}
+// 	L.Push(fn)
+// 	L.Call(0, MultRet)
+// 	return L.GetTop() - top
+// }
 
 func baseError(L *LState) int {
 	obj := L.CheckAny(1)
@@ -195,25 +193,25 @@ func baseLoad(L *LState) int {
 	return loadaux(L, strings.NewReader(strings.Join(buf, "")), chunkname)
 }
 
-func baseLoadFile(L *LState) int {
-	var reader io.Reader
-	var chunkname string
-	var err error
-	if L.GetTop() < 1 {
-		reader = os.Stdin
-		chunkname = "<stdin>"
-	} else {
-		chunkname = L.CheckString(1)
-		reader, err = os.Open(chunkname)
-		if err != nil {
-			L.Push(LNil)
-			L.Push(LString(fmt.Sprintf("can not open file: %v", chunkname)))
-			return 2
-		}
-		defer reader.(*os.File).Close()
-	}
-	return loadaux(L, reader, chunkname)
-}
+// func baseLoadFile(L *LState) int {
+// 	var reader io.Reader
+// 	var chunkname string
+// 	var err error
+// 	if L.GetTop() < 1 {
+// 		reader = os.Stdin
+// 		chunkname = "<stdin>"
+// 	} else {
+// 		chunkname = L.CheckString(1)
+// 		reader, err = os.Open(chunkname)
+// 		if err != nil {
+// 			L.Push(LNil)
+// 			L.Push(LString(fmt.Sprintf("can not open file: %v", chunkname)))
+// 			return 2
+// 		}
+// 		defer reader.(*os.File).Close()
+// 	}
+// 	return loadaux(L, reader, chunkname)
+// }
 
 func baseLoadString(L *LState) int {
 	return loadaux(L, strings.NewReader(L.CheckString(1)), L.OptString(2, "<string>"))
@@ -283,12 +281,12 @@ func basePCall(L *LState) int {
 func basePrint(L *LState) int {
 	top := L.GetTop()
 	for i := 1; i <= top; i++ {
-		fmt.Print(L.ToStringMeta(L.Get(i)).String())
+		print(L.ToStringMeta(L.Get(i)).String())
 		if i != top {
-			fmt.Print("\t")
+			print("\t")
 		}
 	}
-	fmt.Println("")
+	println("")
 	return 0
 }
 

@@ -3,7 +3,6 @@ package lua
 import (
 	"context"
 	"fmt"
-	"os"
 )
 
 type LValueType int
@@ -196,8 +195,8 @@ type Global struct {
 	Global        *LTable
 
 	builtinMts map[int]LValue
-	tempFiles  []*os.File
-	gccount    int32
+	// tempFiles  []*os.File
+	gccount int32
 }
 
 type LState struct {

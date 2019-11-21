@@ -1,10 +1,7 @@
 package lua
 
 import (
-	"bufio"
 	"fmt"
-	"io"
-	"os"
 	"strings"
 )
 
@@ -342,58 +339,58 @@ func (ls *LState) CallMeta(obj LValue, event string) LValue {
 
 /* load and function call operations {{{ */
 
-func (ls *LState) LoadFile(path string) (*LFunction, error) {
-	var file *os.File
-	var err error
-	if len(path) == 0 {
-		file = os.Stdin
-	} else {
-		file, err = os.Open(path)
-		defer file.Close()
-		if err != nil {
-			return nil, newApiErrorE(ApiErrorFile, err)
-		}
-	}
+// func (ls *LState) LoadFile(path string) (*LFunction, error) {
+// 	var file *os.File
+// 	var err error
+// 	if len(path) == 0 {
+// 		file = os.Stdin
+// 	} else {
+// 		file, err = os.Open(path)
+// 		defer file.Close()
+// 		if err != nil {
+// 			return nil, newApiErrorE(ApiErrorFile, err)
+// 		}
+// 	}
 
-	reader := bufio.NewReader(file)
-	// get the first character.
-	c, err := reader.ReadByte()
-	if err != nil && err != io.EOF {
-		return nil, newApiErrorE(ApiErrorFile, err)
-	}
-	if c == byte('#') {
-		// Unix exec. file?
-		// skip first line
-		_, err, _ = readBufioLine(reader)
-		if err != nil {
-			return nil, newApiErrorE(ApiErrorFile, err)
-		}
-	}
+// 	reader := bufio.NewReader(file)
+// 	// get the first character.
+// 	c, err := reader.ReadByte()
+// 	if err != nil && err != io.EOF {
+// 		return nil, newApiErrorE(ApiErrorFile, err)
+// 	}
+// 	if c == byte('#') {
+// 		// Unix exec. file?
+// 		// skip first line
+// 		_, err, _ = readBufioLine(reader)
+// 		if err != nil {
+// 			return nil, newApiErrorE(ApiErrorFile, err)
+// 		}
+// 	}
 
-	if err != io.EOF {
-		// if the file is not empty,
-		// unread the first character of the file or newline character(readBufioLine's last byte).
-		err = reader.UnreadByte()
-		if err != nil {
-			return nil, newApiErrorE(ApiErrorFile, err)
-		}
-	}
+// 	if err != io.EOF {
+// 		// if the file is not empty,
+// 		// unread the first character of the file or newline character(readBufioLine's last byte).
+// 		err = reader.UnreadByte()
+// 		if err != nil {
+// 			return nil, newApiErrorE(ApiErrorFile, err)
+// 		}
+// 	}
 
-	return ls.Load(reader, path)
-}
+// 	return ls.Load(reader, path)
+// }
 
 func (ls *LState) LoadString(source string) (*LFunction, error) {
 	return ls.Load(strings.NewReader(source), "<string>")
 }
 
-func (ls *LState) DoFile(path string) error {
-	if fn, err := ls.LoadFile(path); err != nil {
-		return err
-	} else {
-		ls.Push(fn)
-		return ls.PCall(0, MultRet, nil)
-	}
-}
+// func (ls *LState) DoFile(path string) error {
+// 	if fn, err := ls.LoadFile(path); err != nil {
+// 		return err
+// 	} else {
+// 		ls.Push(fn)
+// 		return ls.PCall(0, MultRet, nil)
+// 	}
+// }
 
 func (ls *LState) DoString(source string) error {
 	if fn, err := ls.LoadString(source); err != nil {

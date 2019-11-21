@@ -1,9 +1,5 @@
 package lua
 
-import (
-	"os"
-)
-
 var CompatVarArg = true
 var FieldsPerFlush = 50
 var RegistrySize = 256 * 20
@@ -23,14 +19,14 @@ var LuaLDir string
 var LuaPathDefault string
 var LuaOS string
 
-func init() {
-	if os.PathSeparator == '/' { // unix-like
-		LuaOS = "unix"
-		LuaLDir = "/usr/local/share/lua/5.1"
-		LuaPathDefault = "./?.lua;" + LuaLDir + "/?.lua;" + LuaLDir + "/?/init.lua"
-	} else { // windows
-		LuaOS = "windows"
-		LuaLDir = "!\\lua"
-		LuaPathDefault = ".\\?.lua;" + LuaLDir + "\\?.lua;" + LuaLDir + "\\?\\init.lua"
-	}
-}
+// func init() {
+// 	if os.PathSeparator == '/' { // unix-like
+// 		LuaOS = "unix"
+// 		LuaLDir = "/usr/local/share/lua/5.1"
+// 		LuaPathDefault = "./?.lua;" + LuaLDir + "/?.lua;" + LuaLDir + "/?/init.lua"
+// 	} else { // windows
+// 		LuaOS = "windows"
+// 		LuaLDir = "!\\lua"
+// 		LuaPathDefault = ".\\?.lua;" + LuaLDir + "\\?.lua;" + LuaLDir + "\\?\\init.lua"
+// 	}
+// }
