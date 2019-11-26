@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/yuin/gopher-lua/ast"
+	"github.com/thegrumpylion/gopher-lua/ast"
 )
 
 /* internal constants & structs  {{{ */
